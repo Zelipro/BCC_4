@@ -11,18 +11,81 @@ from kivymd.uix.button import MDRaisedButton,MDIconButton,MDFlatButton
 from kivymd.uix.tooltip import MDTooltip
 from kivy.uix.behaviors import ButtonBehavior
 from kivymd.uix.card import MDCard
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.label import MDLabel
+from kivy.uix.image import Image
 
 from time import strftime
 import sqlite3
 from kivymd.toast import toast
 from kivymd.uix.datatables import MDDataTable
 from kivy.core.window import Window
-from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.label import MDLabel
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.scrollview import MDScrollView
 
 #Window.size = [340,620]
+
+# Écran de chargement personnalisé
+class LoadingScreen(MDScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.name = 'loading'
+        
+        # Utiliser le même style que votre Page1
+        self.md_bg_color = [1,1,0,1]  # Fond jaune
+        
+        layout = MDBoxLayout(
+            orientation='vertical',
+            spacing=30,
+            pos_hint={'center_x': 0.5, 'center_y': 0.5}
+        )
+        
+        # Logo CEET
+        logo = Image(
+            source='CEET.png',
+            size_hint=(None, None),
+            size=(120, 120),
+            pos_hint={'center_x': 0.5}
+        )
+        
+        # Titre principal
+        title = MDLabel(
+            text='LOGICIEL DE CONTRÔLE DU BCC',
+            font_style='H5',
+            markup=True,
+            halign='center',
+            theme_text_color='Primary'
+        )
+        
+        # Sous-titre
+        subtitle = MDLabel(
+            text='CEET-DRM-BCC',
+            font_style='H6',
+            markup=True,
+            halign='center',
+            theme_text_color='Secondary'
+        )
+        
+        # Message de chargement
+        loading_msg = MDLabel(
+            text='Initialisation en cours...',
+            font_style='Caption',
+            halign='center',
+            theme_text_color='Hint'
+        )
+        
+        layout.add_widget(logo)
+        layout.add_widget(title)
+        layout.add_widget(subtitle)
+        layout.add_widget(loading_msg)
+        
+        self.add_widget(layout)
+        
+        # Programmer le passage à Page1 après 2.5 secondes
+        Clock.schedule_once(self.go_to_main, 2.5)
+    
+    def go_to_main(self, dt):
+        self.manager.current = 'Page1'
 
 Builder.load_file("Pages/Page1.kv")
 Builder.load_file("Pages/Page2.kv")
@@ -554,10 +617,18 @@ class BCC(MDApp):
         
     def build(self):
         self.cr = ScreenManager()
+        
+        # Ajouter l'écran de chargement en premier
+        loading = LoadingScreen()
+        self.cr.add_widget(loading)
+        
+        # Ajouter les autres pages
         Liste = [Page1,Page2,Page3,Page4]
         for elmt in Liste:
             self.cr.add_widget(elmt())
+        
         self.cr.transition = NoTransition()
+        self.cr.current = 'loading'  # Commencer par le loading
         
         return self.cr
     
@@ -571,10 +642,10 @@ class BCC(MDApp):
             elmt.text = Element.get(elmt2)
     
     def Verifi_moi_les_pages(self):
-        dic = {"Page1":self.page1 , "Page2":self.page2 , "Page3":self.page3,"Page4":self.page4}
-
-
-        dic.get(self.cr.current)()
+        # Vérifier seulement si on n'est pas sur l'écran de chargement
+        if self.cr.current != 'loading':
+            dic = {"Page1":self.page1 , "Page2":self.page2 , "Page3":self.page3,"Page4":self.page4}
+            dic.get(self.cr.current)()
 
         Clock.schedule_once(lambda dt : self.Verifi_moi_les_pages(),.5)
     
