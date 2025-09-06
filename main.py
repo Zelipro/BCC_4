@@ -690,6 +690,9 @@ class BCC(MDApp):
                 self.con.commit()
 
                 toast("Ajout effectué avec succes!")
+                for elmt in Liste2[1:]:
+                    elmt.text = ""
+
             except:
                 toast("Error !")
 
